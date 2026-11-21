@@ -21,10 +21,11 @@ main{flex:1;display:grid;grid-template-columns:2fr 1fr;gap:1rem;padding:1rem;min
 .esquerda .card,.direita .card{flex:1;min-height:0;overflow:hidden}
 .card{background:#132b4a;border-radius:10px;padding:1rem;display:flex;flex-direction:column}
 .card h2,.agenda-titulo{font-size:1.35rem;margin-bottom:.6rem;color:#d3dce7;border-bottom:2px solid #d3dce7;padding-bottom:.3rem}
-.card ul{overflow:auto}
+.rola{flex:1;min-height:0;overflow:hidden}
 ul{list-style:none}
 li{padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:1.05rem}
 .hoje{color:#ffd166;font-weight:bold}
+@keyframes subir{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 #telaMidia{display:none;flex:1;min-height:0;background:#000}
 body.modo-midia main{display:none}
 body.modo-midia #telaMidia{display:flex}
@@ -35,12 +36,6 @@ footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;fon
 .faixa{display:inline-block;padding-left:100%;animation:correr 70s linear infinite}
 @keyframes correr{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .oculto{display:none!important}
-@media (max-width:800px){
-  body{overflow:auto}
-  header{flex-wrap:wrap}
-  .titulo h1{font-size:1.15rem}
-  main{grid-template-columns:1fr;overflow:auto}
-}
 </style>
 </head>
 <body>
@@ -61,21 +56,21 @@ footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;fon
   <div class="esquerda">
     <section class="card" id="secAgenda">
       <div class="agenda-titulo">Agenda</div>
-      <ul id="agendaLista"></ul>
+      <div class="rola"><ul id="agendaLista"></ul></div>
     </section>
   </div>
   <div class="direita">
     <section class="card" id="secAvisos">
       <h2>Avisos</h2>
-      <ul id="listaAvisos"></ul>
+      <div class="rola"><ul id="listaAvisos"></ul></div>
     </section>
     <section class="card" id="secAniv">
       <h2>Aniversariantes da semana</h2>
-      <ul id="listaAniv"></ul>
+      <div class="rola"><ul id="listaAniv"></ul></div>
     </section>
     <section class="card" id="secNoticias">
       <h2>Notícias</h2>
-      <ul id="listaNoticias"></ul>
+      <div class="rola"><ul id="listaNoticias"></ul></div>
     </section>
   </div>
 </main>
@@ -99,8 +94,7 @@ const MIDIA_TEMPO_IMAGEM = 10000;
 const PAINEL_TEMPO_NORMAL = 20000;
 const AGENDA_DIAS = 30;
 const INTERVALO_ATUALIZACAO = 600000;
-const CLIMA_CIDADE = 'Nova Iguaçu,BR';
-const CLIMA={nome:"Nova Iguaçu",lat:-22.7592,lon:-43.4509};
+const CLIMA = {nome:'Nova Iguaçu', lat:-22.7592, lon:-43.4509};
 
 let controle = {};
 let playlist = [];
@@ -151,6 +145,20 @@ async function buscarJson(url){
   if(!resp.ok) throw new Error('Google ' + resp.status);
   return resp.json();
 }
+function prepararRolagem(id){
+  const ul = document.getElementById(id);
+  const box = ul.parentElement;
+  const html = ul.dataset.html || ul.innerHTML;
+  ul.dataset.html = html;
+  ul.innerHTML = html;
+  ul.style.animation = 'none';
+  requestAnimationFrame(() => {
+    if(ul.scrollHeight <= box.clientHeight + 8) return;
+    ul.innerHTML = html + html;
+    const segundos = Math.max(20, Math.round(ul.scrollHeight / 24));
+    ul.style.animation = 'subir ' + segundos + 's linear infinite';
+  });
+}
 async function carregarControle(){
   const linhas = await buscarCsv(GIDS.CONTROLE);
   controle = {};
@@ -170,29 +178,26 @@ function aplicarVisibilidade(){
 }
 async function carregarAvisos(){
   const linhas = await buscarCsv(GIDS.AVISOS);
-  const itens = linhas.slice(1).filter(l => l[0] && (l[2] === undefined || l[2] === '' || simOuVerdadeiro(l[2]) || textoExtra(l[1])));
   const ativos = linhas.slice(1).filter(l => l[0] && (l.length < 3 || l[2] === '' || simOuVerdadeiro(l[2]) || !['NAO','NÃO','FALSE','0'].includes(String(l[2]).trim().toUpperCase())));
-  const lista = ativos.length ? ativos : itens;
   const ul = document.getElementById('listaAvisos');
-  ul.innerHTML = lista.length ? lista.map(l => {
+  ul.innerHTML = ativos.length ? ativos.map(l => {
     const extra = textoExtra(l[1]);
     return '<li>' + escapeHtml(l[0]) + (extra ? ' - ' + escapeHtml(extra) : '') + '</li>';
   }).join('') : '<li>Nenhum aviso no momento</li>';
+  delete ul.dataset.html;
+  prepararRolagem('listaAvisos');
 }
 async function carregarNoticias(){
   const linhas = await buscarCsv(GIDS.NOTICIAS);
   const itens = linhas.slice(1).filter(l => l[0]);
-  document.getElementById('listaNoticias').innerHTML = itens.length ? itens.map(l => '<li>' + escapeHtml(l[0]) + '</li>').join('') : '<li>Nenhuma notícia no momento</li>';
+  const ul = document.getElementById('listaNoticias');
+  ul.innerHTML = itens.length ? itens.map(l => '<li>' + escapeHtml(l[0]) + '</li>').join('') : '<li>Nenhuma notícia no momento</li>';
+  delete ul.dataset.html;
+  prepararRolagem('listaNoticias');
 }
 function inicioSemana(base){
   const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
   d.setDate(d.getDate() - d.getDay());
-  return d;
-}
-function fimSemana(inicio){
-  const d = new Date(inicio);
-  d.setDate(d.getDate() + 6);
-  d.setHours(23, 59, 59, 999);
   return d;
 }
 function dataNaSemana(dia, mes, inicio, fim){
@@ -206,7 +211,9 @@ async function carregarAniversarios(){
   const linhas = await buscarCsv(GIDS.ANIVERSARIOS);
   const hoje = new Date();
   const inicio = inicioSemana(hoje);
-  const fim = fimSemana(inicio);
+  const fim = new Date(inicio);
+  fim.setDate(fim.getDate() + 6);
+  fim.setHours(23, 59, 59, 999);
   const itens = linhas.slice(1).map(l => {
     const dt = dataNaSemana(Number(l[1]), Number(l[2]), inicio, fim);
     return dt && l[0] ? {nome:l[0], dt} : null;
@@ -217,6 +224,8 @@ async function carregarAniversarios(){
     const data = String(item.dt.getDate()).padStart(2, '0') + '/' + String(item.dt.getMonth() + 1).padStart(2, '0');
     return '<li' + (ehHoje ? ' class="hoje"' : '') + '>' + data + ' - ' + escapeHtml(item.nome) + (ehHoje ? ' - HOJE' : '') + '</li>';
   }).join('') : '<li>Nenhum aniversariante nesta semana</li>';
+  delete ul.dataset.html;
+  prepararRolagem('listaAniv');
 }
 async function carregarRodape(){
   const linhas = await buscarCsv(GIDS.RODAPE);
@@ -232,12 +241,14 @@ function atualizarRelogio(){
 }
 async function carregarClima(){
   const el = document.getElementById('clima');
-  if(!CLIMA_CHAVE){ el.textContent = ''; return; }
+  const codigos = {0:'céu limpo',1:'quase limpo',2:'parcialmente nublado',3:'nublado',45:'neblina',48:'neblina',51:'garoa',53:'garoa',55:'garoa',61:'chuva',63:'chuva',65:'chuva forte',80:'pancadas',81:'pancadas',82:'pancadas fortes',95:'trovoada'};
   try{
-    const r = await fetch('https://api.openweathermap.org/data/2.5/weather?q=' + encodeURIComponent(CLIMA_CIDADE) + '&units=metric&lang=pt_br&appid=' + CLIMA_CHAVE);
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + CLIMA.lat + '&longitude=' + CLIMA.lon + '&current=temperature_2m,weather_code&timezone=America%2FSao_Paulo';
+    const r = await fetch(url);
     if(!r.ok) throw new Error(r.status);
     const j = await r.json();
-    el.textContent = Math.round(j.main.temp) + '°C, ' + j.weather[0].description;
+    const txt = codigos[j.current.weather_code] || '';
+    el.textContent = Math.round(j.current.temperature_2m) + '°C' + (txt ? ', ' + txt : '');
   }catch(e){ el.textContent = ''; }
 }
 async function carregarAgenda(){
@@ -246,12 +257,15 @@ async function carregarAgenda(){
   const url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CALENDAR_ID) + '/events?key=' + CALENDAR_KEY + '&singleEvents=true&orderBy=startTime&timeMin=' + agora.toISOString() + '&timeMax=' + fim.toISOString() + '&maxResults=50';
   const j = await buscarJson(url);
   const itens = j.items || [];
-  document.getElementById('agendaLista').innerHTML = itens.length ? itens.map(ev => {
+  const ul = document.getElementById('agendaLista');
+  ul.innerHTML = itens.length ? itens.map(ev => {
     const ini = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
     const data = ini.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'});
     const hora = ev.start.dateTime ? ini.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : 'Dia inteiro';
     return '<li><strong>' + escapeHtml(data + ' ' + hora) + '</strong> - ' + escapeHtml(ev.summary || 'Sem título') + '</li>';
   }).join('') : '<li>Nenhum evento nos próximos dias</li>';
+  delete ul.dataset.html;
+  prepararRolagem('agendaLista');
 }
 async function listarArquivosDrive(){
   const arquivos = [];
