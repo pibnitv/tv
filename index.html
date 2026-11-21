@@ -10,14 +10,12 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:min(1.1vw,1.95vh)}
 body{width:100vw;height:100vh;overflow:hidden;color:var(--text);font-family:"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 20% 0%,var(--bg2),var(--bg) 70%);display:grid;grid-template-rows:auto 1fr auto}
-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 2.1rem;border-bottom:.15rem solid var(--accent);background:#0004;gap:1rem}
-.marca,.relogio{display:flex;align-items:center;gap:1rem}
-.marca img{height:4.4rem;width:auto;object-fit:contain}
-.marca h1{font-size:1.7rem;line-height:1}
-.marca small{display:block;color:var(--muted);font-size:1rem;margin-top:.25rem}
-.relogio{margin-left:auto;text-align:right}
-#hora{font-size:3rem;font-weight:800;line-height:1}
-#data,#clima{font-size:1rem;color:var(--muted);margin-top:.25rem}
+header{display:flex;align-items:center;justify-content:space-between;padding:.25rem 1.6rem;border-bottom:.12rem solid var(--accent);background:#0004;gap:.8rem}
+.marca img{height:3rem;width:auto;object-fit:contain}
+.marca h1{font-size:1.25rem;line-height:1}
+.marca small{display:block;color:var(--muted);font-size:.8rem;margin-top:.1rem}
+#hora{font-size:2.1rem;font-weight:800;line-height:1}
+#data,#clima{font-size:.85rem;color:var(--muted);margin-top:.1rem}
 #stage{position:relative;overflow:hidden}
 .scene{position:absolute;inset:0;padding:1.5rem 2.5rem;display:flex;flex-direction:column;opacity:0;transition:opacity .45s;overflow:hidden}
 .scene.on{opacity:1}
@@ -103,7 +101,19 @@ function avisoHtml(a){const titulo=campo(a,'TITULO',0)||campo(a,'AVISO',0);let t
 function newsScenes(){const itens=S.noticias.filter(n=>Array.isArray(n)?n[0]:(n.TITULO||n.TEXTO||n.NOTICIA)).map(n=>Array.isArray(n)?n[0]:(n.TITULO||n.TEXTO||n.NOTICIA));if(!itens.length)return[];return[{dur:cn('TEMPO_NOTICIAS_SEG',12)*1000,html:'<div class="title">Notícias</div><div class="rows"><div class="inner">'+itens.slice(0,8).map(t=>'<div class="row"><span>'+esc(t)+'</span></div>').join('')+'</div></div>'}]}
 function semana(base){const i=new Date(base.getFullYear(),base.getMonth(),base.getDate());i.setDate(i.getDate()-i.getDay());const f=new Date(i);f.setDate(f.getDate()+6);f.setHours(23,59,59,999);return [i,f]}
 function birthdayScenes(){const hoje=new Date(),[ini,fim]=semana(hoje);const lista=S.aniv.map(r=>{let nome,dia,mes;if(Array.isArray(r)){nome=r[0];dia=+r[1];mes=+r[2]}else{nome=r.NOME;dia=+(r.DIA||'');mes=+(r.MES||'');if(r.DATA_NASCIMENTO){const m=String(r.DATA_NASCIMENTO).match(/(\d{1,2})\/(\d{1,2})/);if(m){dia=+m[1];mes=+m[2]}}}if(!nome||!dia||!mes)return null;const dt=new Date(hoje.getFullYear(),mes-1,dia);if(dt<ini||dt>fim)return null;return{nome,dt}}).filter(Boolean).sort((a,b)=>a.dt-b.dt);if(!lista.length)return[];const cards=lista.map(r=>'<div class="birthday '+(r.dt.toDateString()===hoje.toDateString()?'today':'')+'"><div class="num">'+r.dt.getDate()+'</div><strong>'+esc(r.nome)+(r.dt.toDateString()===hoje.toDateString()?' · HOJE':'')+'</strong></div>').join('');return[{dur:cn('TEMPO_ANIVERSARIANTES_SEG',20)*1000,html:'<div class="title">Aniversariantes da semana</div><div class="grid2">'+cards+'</div>'}]}
-function eventosSemana(){const hoje=new Date(),[ini,fim]=semana(hoje);return S.agenda.filter(ev=>{const raw=ev.start&&(ev.start.dateTime||ev.start.date);if(!raw)return false;const dt=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T12:00:00');return dt>=ini&&dt<=fim}).sort((a,b)=>new Date(a.start.dateTime||a.start.date)-new Date(b.start.dateTime||b.start.date))}
+function eventosSemana(){
+  const hoje=new Date();
+  const ini=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+  const fim=new Date(ini);
+  fim.setDate(fim.getDate()+7);
+  fim.setHours(23,59,59,999);
+  return S.agenda.filter(ev=>{
+    const raw=ev.start&&(ev.start.dateTime||ev.start.date);
+    if(!raw)return false;
+    const dt=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T12:00:00');
+    return dt>=ini&&dt<=fim;
+  }).sort((a,b)=>new Date(a.start.dateTime||a.start.date)-new Date(b.start.dateTime||b.start.date));
+}
 function agendaScene(){const lista=eventosSemana();if(!lista.length)return null;const rows=lista.map(ev=>{const ini=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T00:00:00');const data=ini.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});const hora=ev.start.dateTime?ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'Dia inteiro';return '<div class="row"><span>'+esc(ev.summary||'Sem título')+'</span><b>'+esc(data+' '+hora)+'</b></div>'}).join('');const dup=lista.length>6?rows:'';return{dur:cn('TEMPO_AGENDA_SEG',20)*1000,scroll:lista.length>6,html:'<div class="title">Agenda da semana</div><div class="rows"><div class="inner">'+rows+dup+'</div></div>'}}
 function wmo(n){if(n===0)return['☀️','Céu limpo'];if(n<=2)return['⛅','Parcialmente nublado'];if(n===3)return['☁️','Nublado'];if(n<=48)return['🌫️','Neblina'];if(n<=67)return['🌧️','Chuva'];if(n<=82)return['🌦️','Pancadas'];if(n>=95)return['⛈️','Tempestade'];return['🌡️','Instável']}
 async function updateWeather(){const u='https://api.open-meteo.com/v1/forecast?latitude='+CLIMA.lat+'&longitude='+CLIMA.lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&forecast_days=7';S.clima=JSON.parse(await fetchText(u));const c=S.clima.current;$('#clima').textContent=Math.round(c.temperature_2m)+'°C, '+wmo(c.weather_code)[1]}
