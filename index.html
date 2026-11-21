@@ -49,6 +49,10 @@ header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;paddin
 .day b{display:block;color:var(--accent);font-size:1.1rem;text-transform:capitalize}
 .day .e{font-size:2.4rem;margin:.4rem 0}
 .day span{display:block;font-size:1.15rem}
+.weather-box{display:grid;grid-template-columns:1.4fr .9fr;gap:.8rem;min-height:0}
+.weather-details{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.weather-details div{background:var(--card);border-radius:.8rem;padding:.9rem 1rem;color:var(--muted);font-size:1.05rem}
+.weather-details b{display:block;color:#fff;font-size:1.8rem;margin-top:.25rem}
 .midia .blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(25px) brightness(.4);transform:scale(1.1)}
 .midia img.fg{position:relative;width:100%;height:100%;object-fit:contain}
 .midia video,.midia iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
@@ -116,7 +120,29 @@ function eventosSemana(){
 function agendaScene(){const lista=eventosSemana();if(!lista.length)return null;const rows=lista.map(ev=>{const ini=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T00:00:00');const data=ini.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});const hora=ev.start.dateTime?ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'Dia inteiro';return '<div class="row"><span>'+esc(ev.summary||'Sem título')+'</span><b>'+esc(data+' '+hora)+'</b></div>'}).join('');const dup=lista.length>6?rows:'';return{dur:cn('TEMPO_AGENDA_SEG',20)*1000,scroll:lista.length>6,html:'<div class="title">Agenda da semana</div><div class="rows"><div class="inner">'+rows+dup+'</div></div>'}}
 function wmo(n){if(n===0)return['☀️','Céu limpo'];if(n<=2)return['⛅','Parcialmente nublado'];if(n===3)return['☁️','Nublado'];if(n<=48)return['🌫️','Neblina'];if(n<=67)return['🌧️','Chuva'];if(n<=82)return['🌦️','Pancadas'];if(n>=95)return['⛈️','Tempestade'];return['🌡️','Instável']}
 async function updateWeather(){const u='https://api.open-meteo.com/v1/forecast?latitude='+CLIMA.lat+'&longitude='+CLIMA.lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&forecast_days=7';S.clima=JSON.parse(await fetchText(u));const c=S.clima.current;$('#clima').textContent=Math.round(c.temperature_2m)+'°C, '+wmo(c.weather_code)[1]}
-function weatherScene(){if(!S.clima||!cb('MOSTRAR_INDICES',true))return null;const c=S.clima.current,d=S.clima.daily,par=wmo(c.weather_code);const dias=d.time.slice(0,6).map((iso,i)=>{const dt=new Date(iso+'T12:00:00');const nome=i===0?'Hoje':dt.toLocaleDateString('pt-BR',{weekday:'short'});return '<div class="day"><b>'+nome+'</b><div class="e">'+wmo(d.weather_code[i])[0]+'</div><span>'+Math.round(d.temperature_2m_min[i])+'° / '+Math.round(d.temperature_2m_max[i])+'°</span></div>'}).join('');return{dur:cn('TEMPO_INDICES_SEG',8)*1000,html:'<div class="title">Clima · '+CLIMA.nome+'</div><div class="weather-main"><div class="weather-now"><div class="emoji">'+par[0]+'</div><div><div class="temp">'+Math.round(c.temperature_2m)+'°</div><small>'+par[1]+' · sensação '+Math.round(c.apparent_temperature)+'° · umidade '+Math.round(c.relative_humidity_2m)+'%</small></div></div><div class="forecast">'+dias+'</div></div>'}}
+function weatherScene(){
+  if(!S.clima||!cb('MOSTRAR_INDICES',true))return null;
+  const c=S.clima.current,d=S.clima.daily,par=wmo(c.weather_code);
+  const dias=d.time.slice(0,6).map((iso,i)=>{
+    const dt=new Date(iso+'T12:00:00');
+    const nome=i===0?'Hoje':dt.toLocaleDateString('pt-BR',{weekday:'short'});
+    return '<div class="day"><b>'+nome+'</b><div class="e">'+wmo(d.weather_code[i])[0]+'</div><span>'+Math.round(d.temperature_2m_min[i])+'° / '+Math.round(d.temperature_2m_max[i])+'°</span></div>';
+  }).join('');
+  return {dur:cn('TEMPO_INDICES_SEG',8)*1000,html:
+    '<div class="title">Clima · '+CLIMA.nome+'</div>'+
+    '<div class="weather-main">'+
+      '<div class="weather-box">'+
+        '<div class="weather-now"><div class="emoji">'+par[0]+'</div><div><div class="temp">'+Math.round(c.temperature_2m)+'°</div><small>'+par[1]+'</small></div></div>'+
+        '<div class="weather-details">'+
+          '<div>Sensação<b>'+Math.round(c.apparent_temperature)+'°</b></div>'+
+          '<div>Umidade<b>'+Math.round(c.relative_humidity_2m)+'%</b></div>'+
+          '<div>Vento<b>'+Math.round(c.wind_speed_10m)+' km/h</b></div>'+
+          '<div>Hoje<b>'+Math.round(d.temperature_2m_min[0])+'° / '+Math.round(d.temperature_2m_max[0])+'°</b></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="forecast">'+dias+'</div>'+
+    '</div>'};
+}
 async function updateMedia(){if(!DRIVE_KEY||DRIVE_KEY.indexOf('SUA_CHAVE')===0)return;let files=[],token='';do{const u='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+DRIVE_PASTA_ID+"' in parents and trashed=false")+'&fields=nextPageToken,files(id,name,mimeType)&orderBy=name&pageSize=200&key='+DRIVE_KEY+(token?'&pageToken='+token:'');const j=JSON.parse(await fetchText(u,20000));files=files.concat(j.files||[]);token=j.nextPageToken||''}while(token);S.midia=files.filter(f=>/^image\//.test(f.mimeType)||/^video\//.test(f.mimeType)||/presentation|pdf/.test(f.mimeType))}
 function mediaScenes(){return S.midia.map(f=>{if(/^image\//.test(f.mimeType)){const src='https://lh3.googleusercontent.com/d/'+f.id+'=w1920';return{cls:'midia',dur:cn('TEMPO_FOTO_SEG',10)*1000,html:'<div class="blur"></div><img class="fg" src="'+src+'" alt="'+esc(f.name)+'">',mount:el=>{const im=el.querySelector('img');im.onload=()=>{el.querySelector('.blur').style.backgroundImage='url("'+im.src+'")'};im.onerror=()=>{im.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w1920'}}}}if(/^video\//.test(f.mimeType))return{cls:'midia',dur:cn('TEMPO_VIDEO_SEG',180)*1000,video:true,html:'<video src="https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media&key='+DRIVE_KEY+'" autoplay muted playsinline></video>'};const src=/presentation/.test(f.mimeType)?'https://docs.google.com/presentation/d/'+f.id+'/embed?start=true&loop=false&delayms=8000':'https://drive.google.com/file/d/'+f.id+'/preview';return{cls:'midia',dur:cn('TEMPO_SLIDES_SEG',50)*1000,html:'<iframe src="'+src+'" allow="autoplay; fullscreen"></iframe>'}})}
 function renderTicker(){const planilha=S.rodape.filter(x=>Array.isArray(x)?x[0]&&(x[1]===''||yes(x[1])):yes(x.ATIVO)&&(x.TEXTO||x.MENSAGEM)).map(x=>Array.isArray(x)?x[0]:(x.TEXTO||x.MENSAGEM));const agenda=cb('MOSTRAR_AGENDA',true)?eventosSemana().map(ev=>{const ini=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T00:00:00');const data=ini.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});const hora=ev.start.dateTime?' '+ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';return 'Agenda: '+(ev.summary||'Sem título')+' · '+data+hora}):[];const textos=planilha.concat(agenda);const marca='<span class="ticker-item"><img src="logo-pibni.png" alt=""><b>Primeira Igreja Batista de Nova Iguaçu</b></span>';const unit=marca+textos.map(t=>'<span class="ticker-item">'+esc(t)+'</span>').join('');const t=$('#tickerTrack');t.style.animation='none';t.innerHTML='<div class="ticker-group">'+unit+'</div><div class="ticker-group">'+unit+'</div>';void t.offsetWidth;const w=t.firstElementChild.getBoundingClientRect().width;t.style.animation='tick '+Math.max(22,w/75)+'s linear infinite'}
