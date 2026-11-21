@@ -169,8 +169,26 @@ function clock(){const d=new Date();$('#hora').textContent=d.toLocaleTimeString(
 async function updateAgenda(){if(!CALENDAR_KEY||CALENDAR_KEY.indexOf('SUA_CHAVE')===0){renderTicker();return}const agora=new Date(),fim=new Date(agora.getTime()+14*86400000);const u='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(CALENDAR_ID)+'/events?key='+CALENDAR_KEY+'&singleEvents=true&orderBy=startTime&timeMin='+agora.toISOString()+'&timeMax='+fim.toISOString()+'&maxResults=40';const j=JSON.parse(await fetchText(u));S.agenda=j.items||[];renderTicker()}
 async function updateSheets(){const nomes=['AVISOS','NOTICIAS','ANIVERSARIOS','RODAPE'];const r=await Promise.allSettled(nomes.map(load));r.forEach((x,i)=>{if(x.status!=='fulfilled')return;if(nomes[i]==='AVISOS')S.avisos=x.value;if(nomes[i]==='NOTICIAS')S.noticias=x.value;if(nomes[i]==='ANIVERSARIOS')S.aniv=x.value;if(nomes[i]==='RODAPE')S.rodape=x.value});renderTicker()}
 function safe(f){return ()=>Promise.resolve().then(f).catch(e=>console.warn(e.message))}
+  let versaoPainel='';
+async function checarAtualizacao(){
+  try{
+    const html=await fetchText(location.href.split('#')[0].split('?')[0]+'?t='+Date.now(),12000);
+    const marca=String(html.length)+'|'+html.slice(-120);
+    if(!versaoPainel){versaoPainel=marca;return}
+    if(marca!==versaoPainel) location.reload();
+  }catch(e){console.warn(e.message)}
+}
+function recargaDaMadrugada(){
+  const agora=new Date();
+  const alvo=new Date(agora);
+  alvo.setHours(4,0,0,0);
+  if(alvo<=agora) alvo.setDate(alvo.getDate()+1);
+  setTimeout(()=>location.reload(),alvo-agora);
+}
 clock();
 setInterval(clock,1000);
+  setInterval(safe(checarAtualizacao),300000);
+recargaDaMadrugada();
 renderTicker();
 (async()=>{
 await Promise.allSettled([updateControl(),updateSheets(),updateAgenda(),updateWeather(),updateMedia()]);
