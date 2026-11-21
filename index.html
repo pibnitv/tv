@@ -63,6 +63,7 @@ footer{border-top:.15rem solid var(--accent);background:#0006;height:4rem;displa
 .ticker-item{display:inline-flex;align-items:center;font-size:1.25rem;padding-right:2.5rem}
 .ticker-item img{height:2.4rem;width:auto;object-fit:contain;margin-right:.7rem}
 .ticker-item b{background:var(--accent);color:#111;padding:.15rem .6rem;border-radius:.3rem}
+.ticker-item.agenda{background:#f5c542;color:#111;border-radius:.35rem;padding:.15rem .7rem;margin-right:1.2rem;font-weight:800}
 @keyframes tick{to{transform:translateX(-50%)}}
 @keyframes subir{to{transform:translateY(-50%)}}
 </style>
@@ -105,11 +106,8 @@ function newsScenes(){const itens=S.noticias.filter(n=>Array.isArray(n)?n[0]:(n.
 function semana(base){const i=new Date(base.getFullYear(),base.getMonth(),base.getDate());i.setDate(i.getDate()-i.getDay());const f=new Date(i);f.setDate(f.getDate()+6);f.setHours(23,59,59,999);return [i,f]}
 function birthdayScenes(){const hoje=new Date(),[ini,fim]=semana(hoje);const lista=S.aniv.map(r=>{let nome,dia,mes;if(Array.isArray(r)){nome=r[0];dia=+r[1];mes=+r[2]}else{nome=r.NOME;dia=+(r.DIA||'');mes=+(r.MES||'');if(r.DATA_NASCIMENTO){const m=String(r.DATA_NASCIMENTO).match(/(\d{1,2})\/(\d{1,2})/);if(m){dia=+m[1];mes=+m[2]}}}if(!nome||!dia||!mes)return null;const dt=new Date(hoje.getFullYear(),mes-1,dia);if(dt<ini||dt>fim)return null;return{nome,dt}}).filter(Boolean).sort((a,b)=>a.dt-b.dt);if(!lista.length)return[];const cards=lista.map(r=>'<div class="birthday '+(r.dt.toDateString()===hoje.toDateString()?'today':'')+'"><div class="num">'+r.dt.getDate()+'</div><strong>'+esc(r.nome)+(r.dt.toDateString()===hoje.toDateString()?' · HOJE':'')+'</strong></div>').join('');return[{dur:cn('TEMPO_ANIVERSARIANTES_SEG',20)*1000,html:'<div class="title">Aniversariantes da semana</div><div class="grid2">'+cards+'</div>'}]}
 function eventosSemana(){
-  const hoje=new Date();
-  const ini=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
-  const fim=new Date(ini);
-  fim.setDate(fim.getDate()+7);
-  fim.setHours(23,59,59,999);
+  const ini=new Date(); ini.setHours(0,0,0,0);
+  const fim=new Date(ini); fim.setDate(fim.getDate()+6); fim.setHours(23,59,59,999);
   return S.agenda.filter(ev=>{
     const raw=ev.start&&(ev.start.dateTime||ev.start.date);
     if(!raw)return false;
@@ -151,10 +149,11 @@ function renderTicker(){
     const ini=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T00:00:00');
     const data=ini.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
     const hora=ev.start.dateTime?' '+ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
-    return 'Agenda: '+(ev.summary||'Sem título')+' · '+data+hora;
+    return '<span class="ticker-item agenda">Agenda: '+esc((ev.summary||'Sem título')+' · '+data+hora)+'</span>';
   }):[];
+  const textos=planilha.map(t=>'<span class="ticker-item">'+esc(t)+'</span>').concat(agenda);
   const marca='<span class="ticker-item"><img src="logo-pibni.png" alt=""><b>Primeira Igreja Batista de Nova Iguaçu</b></span>';
-  const unit=marca+planilha.map(t=>'<span class="ticker-item">'+esc(t)+'</span>').join('')+agenda.map(t=>'<span class="ticker-item agenda">'+esc(t)+'</span>').join('');
+  const unit=marca+textos.join('');
   const t=$('#tickerTrack');
   t.style.animation='none';
   t.innerHTML='<div class="ticker-group">'+unit+'</div><div class="ticker-group">'+unit+'</div>';
