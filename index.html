@@ -2,397 +2,118 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07162b">
 <title>PIBNI - Painel</title>
 <style>
+:root{--bg:#07162b;--bg2:#0e2f57;--card:rgba(255,255,255,.09);--accent:#d3dce7;--text:#fff;--muted:#b7c7dc}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:Arial,Helvetica,sans-serif;background:#0b1a2e;color:#fff;display:flex;flex-direction:column;overflow:hidden}
-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem 1.2rem;background:#132b4a;border-top:6px solid #d3dce7}
-header img{max-height:4.4rem;width:auto}
-.titulo{text-align:center;flex:1}
-.titulo h1{font-size:2rem;letter-spacing:.05em}
-.titulo p{font-size:1.1rem;opacity:.85}
-.relogio{text-align:right;font-size:1.1rem;line-height:1.4}
-.relogio strong{font-size:2rem;display:block}
-.clima{font-size:1.1rem}
-main{flex:1;display:grid;grid-template-columns:2fr 1fr;gap:1rem;padding:1rem;min-height:0}
-.esquerda,.direita{display:flex;flex-direction:column;gap:1rem;min-height:0}
-.esquerda .card,.direita .card{flex:1;min-height:0;overflow:hidden}
-.card{background:#132b4a;border-radius:10px;padding:1rem;display:flex;flex-direction:column}
-.card h2,.agenda-titulo{font-size:1.35rem;margin-bottom:.6rem;color:#d3dce7;border-bottom:2px solid #d3dce7;padding-bottom:.3rem}
-.rola{flex:1;min-height:0;overflow:hidden}
-ul{list-style:none}
-li{padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:1.05rem}
-.hoje{color:#ffd166;font-weight:bold}
-@keyframes subir{from{transform:translateY(0)}to{transform:translateY(-50%)}}
-#telaMidia{display:none;flex:1;min-height:0;background:#000}
-body.modo-midia main{display:none}
-body.modo-midia #telaMidia{display:flex}
-.midia{position:relative;flex:1;min-height:0;background:#000}
-.midia img,.midia video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
-.midia .vazio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d3dce7;font-size:1.4rem;text-align:center;padding:2rem}
-footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;font-size:1.2rem;min-height:3rem;display:flex;align-items:center}
-.faixa{display:inline-block;padding-left:100%;animation:correr 70s linear infinite}
-@keyframes correr{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-.oculto{display:none!important}
+html{font-size:min(1.1vw,1.95vh)}
+body{width:100vw;height:100vh;overflow:hidden;color:var(--text);font-family:"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 20% 0%,var(--bg2),var(--bg) 70%);display:grid;grid-template-rows:auto 1fr auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 2.1rem;border-bottom:.15rem solid var(--accent);background:#0004;gap:1rem}
+.marca,.relogio{display:flex;align-items:center;gap:1rem}
+.marca img{height:4.4rem;width:auto}
+.marca h1{font-size:1.7rem;line-height:1}
+.marca small{display:block;color:var(--muted);font-size:1rem;margin-top:.25rem}
+.relogio{margin-left:auto;text-align:right}
+#hora{font-size:3rem;font-weight:800;line-height:1}
+#data,#clima{font-size:1rem;color:var(--muted);margin-top:.25rem}
+#stage{position:relative;overflow:hidden}
+.scene{position:absolute;inset:0;padding:1.5rem 2.5rem;display:flex;flex-direction:column;opacity:0;transition:opacity .45s;overflow:hidden}
+.scene.on{opacity:1}
+.scene.midia{padding:0;background:#000}
+.title{font-size:2.2rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+.notice{flex:1;display:flex;flex-direction:column;justify-content:center;background:var(--card);border-left:.8rem solid var(--accent);border-radius:1.4rem;padding:2.5rem 3.5rem}
+.tag{display:inline-block;align-self:flex-start;background:var(--accent);color:#111;font-weight:800;padding:.35rem 1rem;border-radius:99px;font-size:1.1rem;margin-bottom:1rem}
+.notice h1{font-size:4rem;line-height:1.05;margin-bottom:1rem}
+.notice p{font-size:2rem;line-height:1.3;white-space:pre-line;color:#e8f0fb}
+.news{flex:1;display:flex;flex-direction:column;justify-content:center;background:var(--card);border-radius:1.4rem;padding:2.5rem 3.5rem}
+.news h1{font-size:3.1rem;line-height:1.12}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;align-content:start}
+.birthday,.row{display:flex;align-items:center;gap:1rem;background:var(--card);border-radius:1rem;padding:.8rem 1rem}
+.birthday .num{width:3.5rem;height:3.5rem;border-radius:50%;background:var(--accent);color:#111;display:grid;place-items:center;font-size:1.5rem;font-weight:800}
+.birthday strong,.row{font-size:1.35rem}
+.birthday.today{outline:.2rem solid var(--accent)}
+.rows{display:grid;gap:.75rem;align-content:start;overflow:hidden}
+.row{justify-content:space-between}
+.row b{color:var(--accent);white-space:nowrap}
+.weather-main{display:flex;gap:1.3rem;flex:1}
+.weather-now,.weather-details{background:var(--card);border-radius:1.2rem;padding:1.4rem}
+.weather-now{flex:1.2;display:flex;align-items:center;gap:1.5rem}
+.weather-now .emoji{font-size:7rem}
+.weather-now .temp{font-size:6rem;font-weight:800}
+.weather-details{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.weather-details div{background:#ffffff0a;border-radius:.7rem;padding:.8rem;color:var(--muted)}
+.weather-details b{display:block;color:#fff;font-size:1.7rem;margin-top:.2rem}
+.midia .blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(25px) brightness(.4);transform:scale(1.1)}
+.midia img.fg{position:relative;width:100%;height:100%;object-fit:contain}
+.midia video,.midia iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+footer{border-top:.15rem solid var(--accent);background:#0006;height:3.2rem;display:flex;align-items:center;overflow:hidden}
+#ticker{flex:1;overflow:hidden;white-space:nowrap}
+#tickerTrack{display:flex;width:max-content;animation:tick linear infinite}
+.ticker-group{display:flex}
+.ticker-item{font-size:1.25rem;padding-right:2.5rem}
+@keyframes tick{to{transform:translateX(-50%)}}
 </style>
 </head>
 <body>
 <header>
-  <img src="logo-pibni.png" alt="PIBNI">
-  <div class="titulo">
-    <h1>PRIMEIRA IGREJA BATISTA DE NOVA IGUAÇU</h1>
-    <p>Painel de Avisos</p>
+  <div class="marca">
+    <img src="logo-pibni.png" alt="PIBNI">
+    <div><h1>PIBNI</h1><small>Primeira Igreja Batista de Nova Iguaçu</small></div>
   </div>
   <div class="relogio">
-    <strong id="hora">--:--</strong>
-    <span id="data"></span><br>
-    <span class="clima" id="clima"></span>
+    <div><div id="hora">--:--</div><div id="data"></div><div id="clima"></div></div>
   </div>
 </header>
-
-<main>
-  <div class="esquerda">
-    <section class="card" id="secAgenda">
-      <div class="agenda-titulo">Agenda</div>
-      <div class="rola"><ul id="agendaLista"></ul></div>
-    </section>
-  </div>
-  <div class="direita">
-    <section class="card" id="secAvisos">
-      <h2>Avisos</h2>
-      <div class="rola"><ul id="listaAvisos"></ul></div>
-    </section>
-    <section class="card" id="secAniv">
-      <h2>Aniversariantes da semana</h2>
-      <div class="rola"><ul id="listaAniv"></ul></div>
-    </section>
-    <section class="card" id="secNoticias">
-      <h2>Notícias</h2>
-      <div class="rola"><ul id="listaNoticias"></ul></div>
-    </section>
-  </div>
-</main>
-
-<div id="telaMidia">
-  <div class="midia" id="midia"></div>
-</div>
-
-<footer id="rodape">
-  <span class="faixa" id="faixa"></span>
-</footer>
-
+<main id="stage"></main>
+<footer><div id="ticker"><div id="tickerTrack"></div></div></footer>
 <script>
-const PLANILHA_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxeZ8ELfbuLySISLTWO6UQbTFDwgz4HoLu2R-gdb7BTfpOvM8Uijgw3N9tymNYYmVbPxU-JY_jJMCp/pub';
-const GIDS = {CONTROLE:0, AVISOS:1309089437, NOTICIAS:852857065, ANIVERSARIOS:289359330, RODAPE:228875664};
-const CALENDAR_ID = 'pibnirj@gmail.com';
-const CALENDAR_KEY = 'AIzaSyDVzB9Db_MhQXdDyIYBPP3XJd33VszOr64';
-const DRIVE_PASTA_ID = '1efxTP1wE4ywREhQZzm5CZpImgOmPrtO5';
-const DRIVE_KEY = 'AIzaSyBNKJRabhnu9_uiYhIKErUWW-SdOrY6Woc';
-const MIDIA_TEMPO_IMAGEM = 10000;
-const PAINEL_TEMPO_NORMAL = 20000;
-const AGENDA_DIAS = 30;
-const INTERVALO_ATUALIZACAO = 600000;
-const CLIMA = {nome:'Nova Iguaçu', lat:-22.7592, lon:-43.4509};
-
-let controle = {};
-let playlist = [];
-let indiceMidia = 0;
-let timerMidia = null;
-let videoAtual = null;
-let emMidia = false;
-let toqueMidia = 0;
-
-function urlCsv(gid){
-  return PLANILHA_BASE + '?gid=' + gid + '&single=true&output=csv';
-}
-function parseCsv(texto){
-  const linhas = [];
-  let linha = [], campo = '', aspas = false;
-  for(let i = 0; i < texto.length; i++){
-    const c = texto[i];
-    if(aspas){
-      if(c === '"' && texto[i + 1] === '"'){ campo += '"'; i++; }
-      else if(c === '"') aspas = false;
-      else campo += c;
-    }else if(c === '"') aspas = true;
-    else if(c === ','){ linha.push(campo); campo = ''; }
-    else if(c === '\n'){ linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
-    else if(c !== '\r') campo += c;
-  }
-  if(campo.length || linha.length){ linha.push(campo); linhas.push(linha); }
-  return linhas.filter(l => l.some(v => String(v).trim() !== ''));
-}
-function escapeHtml(s){
-  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]));
-}
-function simOuVerdadeiro(v){
-  return ['SIM','S','TRUE','VERDADEIRO','1'].includes(String(v ?? '').trim().toUpperCase());
-}
-function textoExtra(v){
-  const t = String(v ?? '').trim();
-  if(!t || simOuVerdadeiro(t) || ['NAO','NÃO','FALSE','FALSO','0'].includes(t.toUpperCase())) return '';
-  return t;
-}
-async function buscarCsv(gid){
-  const resp = await fetch(urlCsv(gid) + '&t=' + Date.now(), {cache:'no-store'});
-  if(!resp.ok) throw new Error('Planilha ' + gid + ': ' + resp.status);
-  return parseCsv(await resp.text());
-}
-async function buscarJson(url){
-  const resp = await fetch(url);
-  if(!resp.ok) throw new Error('Google ' + resp.status);
-  return resp.json();
-}
-function prepararRolagem(id){
-  const ul = document.getElementById(id);
-  const box = ul.parentElement;
-  const html = ul.dataset.html || ul.innerHTML;
-  ul.dataset.html = html;
-  ul.innerHTML = html;
-  ul.style.animation = 'none';
-  requestAnimationFrame(() => {
-    if(ul.scrollHeight <= box.clientHeight + 8) return;
-    ul.innerHTML = html + html;
-    const segundos = Math.max(20, Math.round(ul.scrollHeight / 24));
-    ul.style.animation = 'subir ' + segundos + 's linear infinite';
-  });
-}
-async function carregarControle(){
-  const linhas = await buscarCsv(GIDS.CONTROLE);
-  controle = {};
-  linhas.slice(1).forEach(l => {
-    const chave = String(l[0] || '').trim().toUpperCase();
-    if(chave) controle[chave] = String(l[1] || '').trim();
-  });
-}
-function midiaLiberada(){
-  return controle.MOSTRAR_MIDIA === undefined || simOuVerdadeiro(controle.MOSTRAR_MIDIA);
-}
-function aplicarVisibilidade(){
-  const mostra = chave => controle[chave] === undefined || simOuVerdadeiro(controle[chave]);
-  document.getElementById('secAgenda').classList.toggle('oculto', !mostra('MOSTRAR_AGENDA'));
-  document.getElementById('secAniv').classList.toggle('oculto', !mostra('MOSTRAR_ANIVERSARIOS'));
-  document.getElementById('rodape').classList.toggle('oculto', !mostra('MOSTRAR_RODAPE'));
-}
-async function carregarAvisos(){
-  const linhas = await buscarCsv(GIDS.AVISOS);
-  const ativos = linhas.slice(1).filter(l => l[0] && (l.length < 3 || l[2] === '' || simOuVerdadeiro(l[2]) || !['NAO','NÃO','FALSE','0'].includes(String(l[2]).trim().toUpperCase())));
-  const ul = document.getElementById('listaAvisos');
-  ul.innerHTML = ativos.length ? ativos.map(l => {
-    const extra = textoExtra(l[1]);
-    return '<li>' + escapeHtml(l[0]) + (extra ? ' - ' + escapeHtml(extra) : '') + '</li>';
-  }).join('') : '<li>Nenhum aviso no momento</li>';
-  delete ul.dataset.html;
-  prepararRolagem('listaAvisos');
-}
-async function carregarNoticias(){
-  const linhas = await buscarCsv(GIDS.NOTICIAS);
-  const itens = linhas.slice(1).filter(l => l[0]);
-  const ul = document.getElementById('listaNoticias');
-  ul.innerHTML = itens.length ? itens.map(l => '<li>' + escapeHtml(l[0]) + '</li>').join('') : '<li>Nenhuma notícia no momento</li>';
-  delete ul.dataset.html;
-  prepararRolagem('listaNoticias');
-}
-function inicioSemana(base){
-  const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-  d.setDate(d.getDate() - d.getDay());
-  return d;
-}
-function dataNaSemana(dia, mes, inicio, fim){
-  for(let ano = inicio.getFullYear() - 1; ano <= fim.getFullYear() + 1; ano++){
-    const dt = new Date(ano, mes - 1, dia);
-    if(dt.getMonth() === mes - 1 && dt >= inicio && dt <= fim) return dt;
-  }
-  return null;
-}
-async function carregarAniversarios(){
-  const linhas = await buscarCsv(GIDS.ANIVERSARIOS);
-  const hoje = new Date();
-  const inicio = inicioSemana(hoje);
-  const fim = new Date(inicio);
-  fim.setDate(fim.getDate() + 6);
-  fim.setHours(23, 59, 59, 999);
-  const itens = linhas.slice(1).map(l => {
-    const dt = dataNaSemana(Number(l[1]), Number(l[2]), inicio, fim);
-    return dt && l[0] ? {nome:l[0], dt} : null;
-  }).filter(Boolean).sort((a, b) => a.dt - b.dt);
-  const ul = document.getElementById('listaAniv');
-  ul.innerHTML = itens.length ? itens.map(item => {
-    const ehHoje = item.dt.toDateString() === hoje.toDateString();
-    const data = String(item.dt.getDate()).padStart(2, '0') + '/' + String(item.dt.getMonth() + 1).padStart(2, '0');
-    return '<li' + (ehHoje ? ' class="hoje"' : '') + '>' + data + ' - ' + escapeHtml(item.nome) + (ehHoje ? ' - HOJE' : '') + '</li>';
-  }).join('') : '<li>Nenhum aniversariante nesta semana</li>';
-  delete ul.dataset.html;
-  prepararRolagem('listaAniv');
-}
-async function carregarRodape(){
-  const linhas = await buscarCsv(GIDS.RODAPE);
-  const textos = linhas.slice(1).filter(l => l[0] && simOuVerdadeiro(l[1])).map(l => escapeHtml(l[0]));
-  document.getElementById('faixa').innerHTML = textos.join('&nbsp;&nbsp;•&nbsp;&nbsp;');
-}
-function atualizarRelogio(){
-  const agora = new Date();
-  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  document.getElementById('hora').textContent = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  document.getElementById('data').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()] + ' de ' + agora.getFullYear();
-}
-async function carregarClima(){
-  const el = document.getElementById('clima');
-  const codigos = {0:'céu limpo',1:'quase limpo',2:'parcialmente nublado',3:'nublado',45:'neblina',48:'neblina',51:'garoa',53:'garoa',55:'garoa',61:'chuva',63:'chuva',65:'chuva forte',80:'pancadas',81:'pancadas',82:'pancadas fortes',95:'trovoada'};
-  try{
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + CLIMA.lat + '&longitude=' + CLIMA.lon + '&current=temperature_2m,weather_code&timezone=America%2FSao_Paulo';
-    const r = await fetch(url);
-    if(!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    const txt = codigos[j.current.weather_code] || '';
-    el.textContent = Math.round(j.current.temperature_2m) + '°C' + (txt ? ', ' + txt : '');
-  }catch(e){ el.textContent = ''; }
-}
-async function carregarAgenda(){
-  const agora = new Date();
-  const fim = new Date(agora.getTime() + AGENDA_DIAS * 86400000);
-  const url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CALENDAR_ID) + '/events?key=' + CALENDAR_KEY + '&singleEvents=true&orderBy=startTime&timeMin=' + agora.toISOString() + '&timeMax=' + fim.toISOString() + '&maxResults=50';
-  const j = await buscarJson(url);
-  const itens = j.items || [];
-  const ul = document.getElementById('agendaLista');
-  ul.innerHTML = itens.length ? itens.map(ev => {
-    const ini = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
-    const data = ini.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'});
-    const hora = ev.start.dateTime ? ini.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : 'Dia inteiro';
-    return '<li><strong>' + escapeHtml(data + ' ' + hora) + '</strong> - ' + escapeHtml(ev.summary || 'Sem título') + '</li>';
-  }).join('') : '<li>Nenhum evento nos próximos dias</li>';
-  delete ul.dataset.html;
-  prepararRolagem('agendaLista');
-}
-async function listarArquivosDrive(){
-  const arquivos = [];
-  let token = '';
-  do{
-    const params = new URLSearchParams({
-      q: "'" + DRIVE_PASTA_ID + "' in parents and trashed = false",
-      fields: 'nextPageToken,files(id,name,mimeType)',
-      orderBy: 'name',
-      pageSize: '200',
-      key: DRIVE_KEY
-    });
-    if(token) params.set('pageToken', token);
-    const j = await buscarJson('https://www.googleapis.com/drive/v3/files?' + params.toString());
-    arquivos.push(...(j.files || []));
-    token = j.nextPageToken || '';
-  }while(token);
-  return arquivos;
-}
-async function paginasDoSlide(id){
-  const j = await buscarJson('https://slides.googleapis.com/v1/presentations/' + encodeURIComponent(id) + '?fields=slides.objectId&key=' + DRIVE_KEY);
-  return (j.slides || []).map(s => s.objectId).filter(Boolean);
-}
-async function carregarMidia(){
-  const arquivos = await listarArquivosDrive();
-  const nova = [];
-  for(const f of arquivos){
-    if(f.mimeType.startsWith('image/')) nova.push({tipo:'imagem', id:f.id, nome:f.name});
-    else if(f.mimeType.startsWith('video/')) nova.push({tipo:'video', id:f.id, nome:f.name});
-    else if(f.mimeType === 'application/vnd.google-apps.drawing') nova.push({tipo:'desenho', id:f.id, nome:f.name});
-    else if(f.mimeType === 'application/vnd.google-apps.presentation'){
-      try{
-        const paginas = await paginasDoSlide(f.id);
-        paginas.forEach((pageId, i) => nova.push({tipo:'slide', id:f.id, pageId, nome:f.name + ' - página ' + (i + 1)}));
-      }catch(e){ console.error('Slide não lido:', f.name, e); }
-    }
-  }
-  playlist = nova;
-}
-function pararVideo(){
-  if(!videoAtual) return;
-  videoAtual.pause();
-  videoAtual.removeAttribute('src');
-  videoAtual.load();
-  videoAtual = null;
-}
-function agendarPainel(){
-  clearTimeout(timerMidia);
-  emMidia = false;
-  pararVideo();
-  document.body.classList.remove('modo-midia');
-  document.getElementById('midia').innerHTML = '';
-  const toque = ++toqueMidia;
-  timerMidia = setTimeout(() => { if(toque === toqueMidia) iniciarCicloMidia(); }, PAINEL_TEMPO_NORMAL);
-}
-async function urlDoItem(item){
-  if(item.tipo === 'slide'){
-    const u = 'https://slides.googleapis.com/v1/presentations/' + encodeURIComponent(item.id) + '/pages/' + encodeURIComponent(item.pageId) + '/thumbnail?thumbnailProperties.mimeType=PNG&thumbnailProperties.thumbnailSize=LARGE&key=' + DRIVE_KEY;
-    const j = await buscarJson(u);
-    if(!j.contentUrl) throw new Error('Slide sem imagem');
-    return j.contentUrl;
-  }
-  if(item.tipo === 'desenho') return 'https://www.googleapis.com/drive/v3/files/' + item.id + '/export?mimeType=image/png&key=' + DRIVE_KEY;
-  return 'https://www.googleapis.com/drive/v3/files/' + item.id + '?alt=media&key=' + DRIVE_KEY;
-}
-async function mostrarItem(){
-  clearTimeout(timerMidia);
-  pararVideo();
-  const box = document.getElementById('midia');
-  const toque = toqueMidia;
-  const item = playlist[indiceMidia];
-  if(!emMidia || !item){ agendarPainel(); return; }
-  box.innerHTML = '<div class="vazio">Abrindo material...</div>';
-  let url = '';
-  try{ url = await urlDoItem(item); }
-  catch(e){
-    console.error(item.nome, e);
-    if(toque === toqueMidia) timerMidia = setTimeout(proximoItem, 1000);
-    return;
-  }
-  if(toque !== toqueMidia || !emMidia) return;
-  box.innerHTML = '';
-  if(item.tipo === 'video'){
-    const v = document.createElement('video');
-    v.src = url;
-    v.autoplay = true;
-    v.muted = true;
-    v.playsInline = true;
-    v.onended = proximoItem;
-    v.onerror = () => { timerMidia = setTimeout(proximoItem, 1000); };
-    box.appendChild(v);
-    videoAtual = v;
-    v.play().catch(() => {});
-  }else{
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = item.nome;
-    img.onerror = () => { timerMidia = setTimeout(proximoItem, 1000); };
-    box.appendChild(img);
-    timerMidia = setTimeout(proximoItem, MIDIA_TEMPO_IMAGEM);
-  }
-}
-function proximoItem(){
-  if(!emMidia) return;
-  indiceMidia++;
-  if(indiceMidia >= playlist.length){ agendarPainel(); return; }
-  mostrarItem();
-}
-function iniciarCicloMidia(){
-  if(!midiaLiberada() || !playlist.length){ agendarPainel(); return; }
-  emMidia = true;
-  indiceMidia = 0;
-  document.body.classList.add('modo-midia');
-  mostrarItem();
-}
-document.getElementById('midia').addEventListener('click', () => { if(videoAtual) videoAtual.muted = false; });
-async function atualizarTudo(){
-  try{ await carregarControle(); }catch(e){ console.error(e); }
-  aplicarVisibilidade();
-  const tarefas = [carregarAvisos(), carregarNoticias(), carregarAniversarios(), carregarRodape(), carregarAgenda(), carregarMidia(), carregarClima()];
-  (await Promise.allSettled(tarefas)).forEach(r => { if(r.status === 'rejected') console.error(r.reason); });
-  if(!emMidia && !timerMidia) agendarPainel();
-}
-atualizarRelogio();
-setInterval(atualizarRelogio, 1000);
-atualizarTudo();
-setInterval(atualizarTudo, INTERVALO_ATUALIZACAO);
+(()=>{
+'use strict';
+const CALENDAR_ID='pibnirj@gmail.com';
+const CALENDAR_KEY='AIzaSyDVzB9Db_MhQXdDyIYBPP3XJd33VszOr64';
+const DRIVE_PASTA_ID='1efxTP1wE4ywREhQZzm5CZpImgOmPrtO5';
+const DRIVE_KEY='AIzaSyBNKJRabhnu9_uiYhIKErUWW-SdOrY6Woc';
+const CLIMA={nome:'Nova Iguaçu',lat:-22.7592,lon:-43.4509};
+const SHEET='https://docs.google.com/spreadsheets/d/e/2PACX-1vTxeZ8ELfbuLySISLTWO6UQbTFDwgz4HoLu2R-gdb7BTfpOvM8Uijgw3N9tymNYYmVbPxU-JY_jJMCp/pub?single=true&output=csv&gid=';
+const GID={CONTROLE:'0',AVISOS:'1309089437',NOTICIAS:'852857065',ANIVERSARIOS:'289359330',RODAPE:'228875664'};
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
+const yes=v=>['SIM','S','TRUE','1','LIGADA','LIGADO','ON'].includes(norm(v));
+const S={ctrl:{},avisos:[],noticias:[],aniv:[],rodape:[],midia:[],clima:null,agenda:[]};
+const cv=(k,d)=>S.ctrl[k]!==undefined&&S.ctrl[k]!==''?S.ctrl[k]:d;
+const cn=(k,d)=>{const n=parseFloat(String(cv(k,d)).replace(',','.'));return isNaN(n)?d:n};
+const cb=(k,d=true)=>yes(cv(k,d?'SIM':'NAO'));
+async function fetchText(url,ms=15000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{signal:c.signal,cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return await r.text()}finally{clearTimeout(t)}}
+function parseCSV(t){const rows=[];let row=[],f='',q=false;t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===','){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);f='';rows.push(row);row=[]}else f+=c}if(f!==''||row.length){row.push(f);rows.push(row)}return rows.filter(r=>r.some(x=>String(x).trim()))}
+async function load(name){const rows=parseCSV(await fetchText(SHEET+GID[name]+'&t='+Date.now()));if(!rows.length)return[];const h=rows[0].map(x=>norm(x).replace(/\s+/g,'_'));const header=h.some(x=>['TITULO','TEXTO','NOME','ATIVO','DIA','MES'].includes(x));const base=header?rows.slice(1):rows.slice(1);return base.map(r=>header?Object.fromEntries(h.map((k,i)=>[k,String(r[i]??'').trim()])):r.map(x=>String(x??'').trim()))}
+async function updateControl(){const rows=parseCSV(await fetchText(SHEET+GID.CONTROLE+'&t='+Date.now()));const c={};rows.forEach(r=>{const k=norm(r[0]).replace(/\s+/g,'_');if(k&&k!=='CHAVE')c[k]=String(r[1]??'').trim()});S.ctrl=c;if(norm(c.RECARREGAR_PAINEL)==='SIM'&&localStorage.getItem('pibni_recarga')!=='1'){localStorage.setItem('pibni_recarga','1');setTimeout(()=>location.reload(),500)}if(norm(c.RECARREGAR_PAINEL)!=='SIM')localStorage.removeItem('pibni_recarga')}
+function avisoAtivo(a){if(Array.isArray(a))return a[0]&&(a.length<3||a[2]===''||yes(a[2]));return (!a.ATIVO||yes(a.ATIVO))&&(a.TITULO||a.TEXTO||a.AVISO)}
+function noticeScenes(){return S.avisos.filter(avisoAtivo).map(a=>{const titulo=Array.isArray(a)?a[0]:(a.TITULO||a.AVISO||'');const texto=Array.isArray(a)?(['SIM','NAO','NÃO'].includes(norm(a[1]))?'':a[1]):(a.TEXTO||'');return{dur:cn('TEMPO_AVISO_SEG',15)*1000,html:'<div class="notice"><span class="tag">AVISO</span>'+(titulo?'<h1>'+esc(titulo)+'</h1>':'')+'<p>'+esc(texto)+'</p></div>'}})}
+function newsScenes(){const itens=S.noticias.filter(n=>Array.isArray(n)?n[0]:(n.TITULO||n.TEXTO||n.NOTICIA)).map(n=>Array.isArray(n)?n[0]:(n.TITULO||n.TEXTO||n.NOTICIA));if(!itens.length)return[];const cards=itens.slice(0,8).map(t=>'<div class="row"><span>'+esc(t)+'</span></div>').join('');return[{dur:cn('TEMPO_NOTICIAS_SEG',12)*1000,html:'<div class="title">Notícias</div><div class="rows">'+cards+'</div>'}]}
+function semana(base){const i=new Date(base.getFullYear(),base.getMonth(),base.getDate());i.setDate(i.getDate()-i.getDay());const f=new Date(i);f.setDate(f.getDate()+6);f.setHours(23,59,59,999);return [i,f]}
+function birthdayScenes(){const hoje=new Date(),[ini,fim]=semana(hoje);const lista=S.aniv.map(r=>{let nome,dia,mes;if(Array.isArray(r)){nome=r[0];dia=+r[1];mes=+r[2]}else{nome=r.NOME;dia=+(r.DIA||'');mes=+(r.MES||'');if(r.DATA_NASCIMENTO){const m=String(r.DATA_NASCIMENTO).match(/(\d{1,2})\/(\d{1,2})/);if(m){dia=+m[1];mes=+m[2]}}}if(!nome||!dia||!mes)return null;const dt=new Date(hoje.getFullYear(),mes-1,dia);if(dt<ini||dt>fim)return null;return{nome,dt}}).filter(Boolean).sort((a,b)=>a.dt-b.dt);if(!lista.length)return[];const cards=lista.map(r=>'<div class="birthday '+(r.dt.toDateString()===hoje.toDateString()?'today':'')+'"><div class="num">'+r.dt.getDate()+'</div><strong>'+esc(r.nome)+(r.dt.toDateString()===hoje.toDateString()?' · HOJE':'')+'</strong></div>').join('');return[{dur:cn('TEMPO_ANIVERSARIANTES_SEG',15)*1000,html:'<div class="title">Aniversariantes da semana</div><div class="grid2">'+cards+'</div>'}]}
+function agendaScene(){if(!S.agenda.length)return null;const rows=S.agenda.slice(0,12).map(ev=>{const ini=ev.start.dateTime?new Date(ev.start.dateTime):new Date(ev.start.date+'T00:00:00');const data=ini.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});const hora=ev.start.dateTime?ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'Dia inteiro';return '<div class="row"><span>'+esc(ev.summary||'Sem título')+'</span><b>'+esc(data+' '+hora)+'</b></div>'}).join('');return{dur:cn('TEMPO_AGENDA_SEG',20)*1000,html:'<div class="title">Agenda</div><div class="rows">'+rows+'</div>'}}
+function wmo(n){if(n===0)return['☀️','Céu limpo'];if(n<=2)return['⛅','Parcialmente nublado'];if(n===3)return['☁️','Nublado'];if(n<=48)return['🌫️','Neblina'];if(n<=67)return['🌧️','Chuva'];if(n<=82)return['🌦️','Pancadas'];if(n>=95)return['⛈️','Tempestade'];return['🌡️','Instável']}
+function weatherScene(){if(!S.clima)return null;const c=S.clima.current,d=S.clima.daily,[em,desc]=wmo(c.weather_code);$('#clima').textContent=Math.round(c.temperature_2m)+'°C, '+desc;return{dur:cn('TEMPO_CLIMA_SEG',12)*1000,html:'<div class="title">Clima · '+CLIMA.nome+'</div><div class="weather-main"><div class="weather-now"><div class="emoji">'+em+'</div><div><div class="temp">'+Math.round(c.temperature_2m)+'°</div><div>'+desc+'</div></div></div><div class="weather-details"><div>Sensação<b>'+Math.round(c.apparent_temperature)+'°</b></div><div>Umidade<b>'+Math.round(c.relative_humidity_2m)+'%</b></div><div>Vento<b>'+Math.round(c.wind_speed_10m)+' km/h</b></div><div>Hoje<b>'+Math.round(d.temperature_2m_min[0])+'° / '+Math.round(d.temperature_2m_max[0])+'°</b></div></div></div>'}}
+async function updateMedia(){if(!DRIVE_KEY||DRIVE_KEY.includes('SUA_CHAVE'))return;let files=[],token='';do{const u='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+DRIVE_PASTA_ID+"' in parents and trashed=false")+'&fields=nextPageToken,files(id,name,mimeType)&orderBy=name&pageSize=200&key='+DRIVE_KEY+(token?'&pageToken='+token:'');const j=JSON.parse(await fetchText(u,20000));files.push(...(j.files||[]));token=j.nextPageToken||''}while(token);S.midia=files.filter(f=>/^image\//.test(f.mimeType)||/^video\//.test(f.mimeType)||/presentation|pdf/.test(f.mimeType))}
+function mediaScenes(){return S.midia.map(f=>{if(/^image\//.test(f.mimeType)){const src='https://lh3.googleusercontent.com/d/'+f.id+'=w1920';return{cls:'midia',dur:cn('TEMPO_FOTO_SEG',10)*1000,html:'<div class="blur"></div><img class="fg" src="'+src+'" alt="'+esc(f.name)+'">',mount:el=>{const im=el.querySelector('img');im.onload=()=>el.querySelector('.blur').style.backgroundImage='url("'+im.src+'")';im.onerror=()=>{im.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w1920'}}}}if(/^video\//.test(f.mimeType))return{cls:'midia',dur:cn('TEMPO_VIDEO_SEG',180)*1000,video:true,html:'<video src="https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media&key='+DRIVE_KEY+'" autoplay muted playsinline></video>'};const src=/presentation/.test(f.mimeType)?'https://docs.google.com/presentation/d/'+f.id+'/embed?start=true&loop=false&delayms=8000':'https://drive.google.com/file/d/'+f.id+'/preview';return{cls:'midia',dur:cn('TEMPO_SLIDES_SEG',60)*1000,html:'<iframe src="'+src+'" allow="autoplay; fullscreen"></iframe>'}})}
+function renderTicker(){const list=S.rodape.filter(x=>Array.isArray(x)?x[0]&&yes(x[1]):yes(x.ATIVO)&&(x.TEXTO||x.MENSAGEM)).map(x=>Array.isArray(x)?x[0]:(x.TEXTO||x.MENSAGEM));const unit=list.map(t=>'<span class="ticker-item">'+esc(t)+'</span>').join('');const t=$('#tickerTrack');t.innerHTML=unit?'<div class="ticker-group">'+unit+'</div><div class="ticker-group">'+unit+'</div>':'';if(!unit)return;const w=t.firstElementChild.getBoundingClientRect().width;t.style.animation='tick '+Math.max(18,w/75)+'s linear infinite'}
+function sceneList(){const a=[];if(cb('MOSTRAR_AVISOS',true))a.push(...noticeScenes());if(cb('MOSTRAR_AGENDA',true)){const g=agendaScene();if(g)a.push(g)}if(cb('MOSTRAR_NOTICIAS',true))a.push(...newsScenes());if(cb('MOSTRAR_ANIVERSARIOS',true))a.push(...birthdayScenes());if(cb('MOSTRAR_CLIMA',true)){const w=weatherScene();if(w)a.push(w)}if(cb('MOSTRAR_MIDIA',true)||cb('MOSTRAR_MIDIA_DRIVE',true))a.push(...mediaScenes());if(!a.length)a.push({dur:8000,html:'<div class="title">PIBNI</div><div class="notice"><h1>Primeira Igreja Batista de Nova Iguaçu</h1><p>Cultos transmitidos ao vivo: domingo às 10h e às 18h45.</p></div>'});return a}
+const stage=$('#stage');
+async function playScene(s){const old=stage.firstElementChild;if(old){old.classList.remove('on');await sleep(400);old.querySelectorAll('video').forEach(v=>{v.pause();v.removeAttribute('src');v.load()});old.querySelectorAll('iframe').forEach(f=>f.src='about:blank');old.remove()}const el=document.createElement('div');el.className='scene '+(s.cls||'');el.innerHTML=s.html;stage.appendChild(el);s.mount?.(el);await sleep(40);el.classList.add('on');if(s.video){const v=el.querySelector('video');await new Promise(ok=>{const fim=()=>ok();v.onended=fim;v.onerror=fim;setTimeout(fim,s.dur||180000);v.play().catch(()=>{})})}else await sleep(s.dur||8000)}
+async function cycle(){while(true){try{for(const s of sceneList())await playScene(s)}catch(e){console.error(e);await sleep(2500)}}}
+function clock(){const d=new Date();$('#hora').textContent=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});$('#data').textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}
+async function updateAgenda(){if(!CALENDAR_KEY||CALENDAR_KEY.includes('SUA_CHAVE'))return;const agora=new Date(),fim=new Date(agora.getTime()+30*86400000);const u='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(CALENDAR_ID)+'/events?key='+CALENDAR_KEY+'&singleEvents=true&orderBy=startTime&timeMin='+agora.toISOString()+'&timeMax='+fim.toISOString()+'&maxResults=30';S.agenda=(JSON.parse(await fetchText(u))).items||[]}
+async function updateWeather(){const u='https://api.open-meteo.com/v1/forecast?latitude='+CLIMA.lat+'&longitude='+CLIMA.lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&forecast_days=2';S.clima=JSON.parse(await fetchText(u));weatherScene()}
+async function updateSheets(){const nomes=['AVISOS','NOTICIAS','ANIVERSARIOS','RODAPE'];const r=await Promise.allSettled(nomes.map(load));r.forEach((x,i)=>{if(x.status!=='fulfilled')return;if(nomes[i]==='AVISOS')S.avisos=x.value;if(nomes[i]==='NOTICIAS')S.noticias=x.value;if(nomes[i]==='ANIVERSARIOS')S.aniv=x.value;if(nomes[i]==='RODAPE')S.rodape=x.value});renderTicker()}
+const safe=f=>()=>Promise.resolve().then(f).catch(e=>console.warn(e.message));
+clock();setInterval(clock,1000);
+(async()=>{await Promise.allSettled([updateControl(),updateSheets(),updateAgenda(),updateWeather(),updateMedia()]);setInterval(safe(updateControl),60000);setInterval(safe(updateSheets),300000);setInterval(safe(updateAgenda),600000);setInterval(safe(updateMedia),600000);setInterval(safe(updateWeather),900000);cycle()})();
+})();
 </script>
 </body>
 </html>
