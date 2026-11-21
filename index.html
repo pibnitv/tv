@@ -8,7 +8,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:Arial,Helvetica,sans-serif;background:#0b1a2e;color:#fff;display:flex;flex-direction:column;overflow:hidden}
-
 header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem 1.2rem;background:#132b4a;border-top:6px solid #d3dce7}
 header img{max-height:4.4rem;width:auto}
 .titulo{text-align:center;flex:1}
@@ -17,31 +16,31 @@ header img{max-height:4.4rem;width:auto}
 .relogio{text-align:right;font-size:1.1rem;line-height:1.4}
 .relogio strong{font-size:2rem;display:block}
 .clima{font-size:1.1rem}
-
 main{flex:1;display:grid;grid-template-columns:2fr 1fr;gap:1rem;padding:1rem;min-height:0}
-.esquerda{display:flex;flex-direction:column;gap:1rem;min-height:0}
-.direita{display:flex;flex-direction:column;gap:1rem;min-height:0}
-.direita .card{flex:1;min-height:0;overflow:hidden}
-
-.card{background:#132b4a;border-radius:10px;padding:1rem;overflow:hidden;min-height:0;display:flex;flex-direction:column}
-.card h2{font-size:1.3rem;margin-bottom:.6rem;color:#d3dce7;border-bottom:2px solid #d3dce7;padding-bottom:.3rem}
-.agenda-titulo{font-size:1.5rem;margin-bottom:.6rem;color:#d3dce7;border-bottom:2px solid #d3dce7;padding-bottom:.3rem}
-#secMidia{flex:1.2;min-height:0}
-#secAgenda{flex:1;min-height:0}
-
-.midia{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:8px;background:#000}
-.midia > *{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0}
-.midia .vazio{display:flex;align-items:center;justify-content:center;height:100%;color:#d3dce7;font-size:1.2rem}
-
+.esquerda,.direita{display:flex;flex-direction:column;gap:1rem;min-height:0}
+.esquerda .card,.direita .card{flex:1;min-height:0;overflow:hidden}
+.card{background:#132b4a;border-radius:10px;padding:1rem;display:flex;flex-direction:column}
+.card h2,.agenda-titulo{font-size:1.35rem;margin-bottom:.6rem;color:#d3dce7;border-bottom:2px solid #d3dce7;padding-bottom:.3rem}
+.card ul{overflow:auto}
 ul{list-style:none}
 li{padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:1.05rem}
 .hoje{color:#ffd166;font-weight:bold}
-
+#telaMidia{display:none;flex:1;min-height:0;background:#000}
+body.modo-midia main{display:none}
+body.modo-midia #telaMidia{display:flex}
+.midia{position:relative;flex:1;min-height:0;background:#000}
+.midia img,.midia video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.midia .vazio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d3dce7;font-size:1.4rem;text-align:center;padding:2rem}
 footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;font-size:1.2rem;min-height:3rem;display:flex;align-items:center}
 .faixa{display:inline-block;padding-left:100%;animation:correr 70s linear infinite}
 @keyframes correr{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-
 .oculto{display:none!important}
+@media (max-width:800px){
+  body{overflow:auto}
+  header{flex-wrap:wrap}
+  .titulo h1{font-size:1.15rem}
+  main{grid-template-columns:1fr;overflow:auto}
+}
 </style>
 </head>
 <body>
@@ -60,24 +59,18 @@ footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;fon
 
 <main>
   <div class="esquerda">
-    <section class="card" id="secMidia">
-      <h2>Destaques</h2>
-      <div class="midia" id="midia"><div class="vazio">Carregando material...</div></div>
-    </section>
-
     <section class="card" id="secAgenda">
       <div class="agenda-titulo">Agenda</div>
       <ul id="agendaLista"></ul>
     </section>
   </div>
-
   <div class="direita">
     <section class="card" id="secAvisos">
       <h2>Avisos</h2>
       <ul id="listaAvisos"></ul>
     </section>
     <section class="card" id="secAniv">
-      <h2>Aniversariantes do mês</h2>
+      <h2>Aniversariantes da semana</h2>
       <ul id="listaAniv"></ul>
     </section>
     <section class="card" id="secNoticias">
@@ -87,274 +80,301 @@ footer{background:#132b4a;padding:.5rem 0;overflow:hidden;white-space:nowrap;fon
   </div>
 </main>
 
+<div id="telaMidia">
+  <div class="midia" id="midia"></div>
+</div>
+
 <footer id="rodape">
   <span class="faixa" id="faixa"></span>
 </footer>
+
 <script>
-/* ========== CONFIGURAÇÃO ========== */
 const PLANILHA_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxeZ8ELfbuLySISLTWO6UQbTFDwgz4HoLu2R-gdb7BTfpOvM8Uijgw3N9tymNYYmVbPxU-JY_jJMCp/pub';
-const GIDS = {
-  CONTROLE: 0,
-  AVISOS: 1309089437,
-  NOTICIAS: 852857065,
-  ANIVERSARIOS: 289359330,
-  RODAPE: 228875664
-};
+const GIDS = {CONTROLE:0, AVISOS:1309089437, NOTICIAS:852857065, ANIVERSARIOS:289359330, RODAPE:228875664};
 const CALENDAR_ID = 'pibnirj@gmail.com';
 const CALENDAR_KEY = 'AIzaSyDVzB9Db_MhQXdDyIYBPP3XJd33VszOr64';
 const DRIVE_PASTA_ID = '1efxTP1wE4ywREhQZzm5CZpImgOmPrtO5';
 const DRIVE_KEY = 'AIzaSyBNKJRabhnu9_uiYhIKErUWW-SdOrY6Woc';
 const MIDIA_TEMPO_IMAGEM = 10000;
+const PAINEL_TEMPO_NORMAL = 20000;
 const AGENDA_DIAS = 30;
 const INTERVALO_ATUALIZACAO = 600000;
 const CLIMA_CIDADE = 'Nova Iguaçu,BR';
 const CLIMA_CHAVE = '';
 
 let controle = {};
-
-/* ========== UTILITÁRIOS ========== */
-function urlCsv(gid){
-  return `${PLANILHA_BASE}?gid=${gid}&single=true&output=csv`;
-}
-
-function parseCsv(texto){
-  const linhas = [];
-  let linha = [], campo = '', aspas = false;
-  for(let i=0;i<texto.length;i++){
-    const c = texto[i];
-    if(aspas){
-      if(c === '"' && texto[i+1] === '"'){ campo += '"'; i++; }
-      else if(c === '"'){ aspas = false; }
-      else campo += c;
-    } else {
-      if(c === '"') aspas = true;
-      else if(c === ','){ linha.push(campo); campo = ''; }
-      else if(c === '\n'){ linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
-      else if(c !== '\r') campo += c;
-    }
-  }
-  if(campo.length || linha.length){ linha.push(campo); linhas.push(linha); }
-  return linhas.filter(l => l.some(v => v.trim() !== ''));
-}
-
-function escapeHtml(s){
-  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function simOuVerdadeiro(v){
-  return ['SIM','S','TRUE','VERDADEIRO','1'].includes(String(v ?? '').trim().toUpperCase());
-}
-
-async function buscarCsv(gid){
-  const resp = await fetch(urlCsv(gid) + '&t=' + Date.now(), { cache: 'no-store' });
-  if(!resp.ok) throw new Error('Falha ao ler aba ' + gid + ': ' + resp.status);
-  return parseCsv(await resp.text());
-}
-
-async function carregarControle(){
-  const linhas = await buscarCsv(GIDS.CONTROLE);
-  controle = {};
-  for(const l of linhas.slice(1)){
-    const chave = (l[0] || '').trim().toUpperCase();
-    if(chave) controle[chave] = (l[1] || '').trim();
-  }
-  return controle;
-}
-
-function aplicarVisibilidade(){
-  const mostra = (chave) => controle[chave] === undefined ? true : simOuVerdadeiro(controle[chave]);
-  document.getElementById('secAgenda').classList.toggle('oculto', !mostra('MOSTRAR_AGENDA'));
-  document.getElementById('secAniv').classList.toggle('oculto', !mostra('MOSTRAR_ANIVERSARIOS'));
-  document.getElementById('rodape').classList.toggle('oculto', !mostra('MOSTRAR_RODAPE'));
-  document.getElementById('secMidia').classList.toggle('oculto', !mostra('MOSTRAR_MIDIA'));
-}
-
-async function carregarAvisos(){
-  const linhas = await buscarCsv(GIDS.AVISOS);
-  const ul = document.getElementById('listaAvisos');
-  const itens = linhas.slice(1).filter(l => l[0]);
-  ul.innerHTML = itens.length
-    ? itens.map(l => `<li>${escapeHtml(l[0])}${l[1] ? ' - ' + escapeHtml(l[1]) : ''}</li>`).join('')
-    : '<li>Nenhum aviso no momento</li>';
-}
-
-async function carregarNoticias(){
-  const linhas = await buscarCsv(GIDS.NOTICIAS);
-  const ul = document.getElementById('listaNoticias');
-  const itens = linhas.slice(1).filter(l => l[0]);
-  ul.innerHTML = itens.length
-    ? itens.map(l => `<li>${escapeHtml(l[0])}</li>`).join('')
-    : '<li>Nenhuma notícia no momento</li>';
-}
-async function carregarAniversarios(){
-  const linhas = await buscarCsv(GIDS.ANIVERSARIOS);
-  const ul = document.getElementById('listaAniv');
-  const hoje = new Date();
-  const diaHoje = hoje.getDate();
-  const mesHoje = hoje.getMonth() + 1;
-  const itens = linhas.slice(1)
-    .filter(l => l[0] && Number(l[2]) === mesHoje)
-    .sort((a,b) => Number(a[1]) - Number(b[1]));
-  ul.innerHTML = itens.length
-    ? itens.map(l => {
-        const hojeClasse = Number(l[1]) === diaHoje ? ' class="hoje"' : '';
-        const marca = Number(l[1]) === diaHoje ? ' - HOJE' : '';
-        return `<li${hojeClasse}>${String(l[1]).padStart(2,'0')}/${String(l[2]).padStart(2,'0')} - ${escapeHtml(l[0])}${marca}</li>`;
-      }).join('')
-    : '<li>Nenhum aniversariante neste mês</li>';
-}
-
-async function carregarRodape(){
-  const linhas = await buscarCsv(GIDS.RODAPE);
-  const faixa = document.getElementById('faixa');
-  const ativos = linhas.slice(1).filter(l => l[0] && simOuVerdadeiro(l[1]));
-  const textos = ativos.map(l => escapeHtml(l[0]));
-  faixa.innerHTML = textos.length ? textos.join('&nbsp;&nbsp;•&nbsp;&nbsp;') : '';
-}
-
-function formatarDataHoje(){
-  const d = new Date();
-  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
-}
-
-function atualizarRelogio(){
-  const agora = new Date();
-  document.getElementById('hora').textContent = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  document.getElementById('data').textContent = formatarDataHoje();
-}
-
-async function carregarClima(){
-  const el = document.getElementById('clima');
-  if(!CLIMA_CHAVE){ el.textContent = ''; return; }
-  try{
-    const r = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(CLIMA_CIDADE)}&units=metric&lang=pt_br&appid=${CLIMA_CHAVE}`);
-    if(!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    el.textContent = `${Math.round(j.main.temp)}°C, ${j.weather[0].description}`;
-  }catch(e){
-    el.textContent = '';
-  }
-}
-
-async function carregarAgenda(){
-  const agora = new Date();
-  const fim = new Date(agora.getTime() + AGENDA_DIAS * 86400000);
-  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${CALENDAR_KEY}&singleEvents=true&orderBy=startTime&timeMin=${agora.toISOString()}&timeMax=${fim.toISOString()}&maxResults=50`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error('Falha ao ler agenda: ' + r.status);
-  const j = await r.json();
-  const ul = document.getElementById('agendaLista');
-  const itens = (j.items || []);
-  ul.innerHTML = itens.length
-    ? itens.map(ev => {
-        const ini = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
-        const dataTxt = ini.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'});
-        const horaTxt = ev.start.dateTime ? ini.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : 'Dia inteiro';
-        return `<li><strong>${escapeHtml(dataTxt)} ${escapeHtml(horaTxt)}</strong> - ${escapeHtml(ev.summary || 'Sem título')}</li>`;
-      }).join('')
-    : '<li>Nenhum evento nos próximos dias</li>';
-}
-/* ========== DRIVE: MÍDIA ========== */
 let playlist = [];
 let indiceMidia = 0;
 let timerMidia = null;
 let videoAtual = null;
-let chaveMidia = '';
+let emMidia = false;
+let toqueMidia = 0;
 
-async function carregarMidia(){
-  const params = new URLSearchParams({
-    q: `'${DRIVE_PASTA_ID}' in parents and trashed = false`,
-    fields: 'files(id,name,mimeType)',
-    orderBy: 'name',
-    pageSize: '200',
-    key: DRIVE_KEY
-  });
-  const r = await fetch('https://www.googleapis.com/drive/v3/files?' + params.toString());
-  if(!r.ok) throw new Error('Falha ao ler pasta do Drive: ' + r.status);
-  const j = await r.json();
-  playlist = (j.files || []).filter(f => f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/'));
-  const novaChave = playlist.map(f => f.id).join('|');
-  if(novaChave !== chaveMidia){
-    chaveMidia = novaChave;
-    indiceMidia = 0;
-    mostrarItem();
-  }
+function urlCsv(gid){
+  return PLANILHA_BASE + '?gid=' + gid + '&single=true&output=csv';
 }
-
-function mostrarItem(){
-  const box = document.getElementById('midia');
-  clearTimeout(timerMidia);
-  if(videoAtual){
-    videoAtual.pause();
-    videoAtual.removeAttribute('src');
-    videoAtual.load();
-    videoAtual = null;
+function parseCsv(texto){
+  const linhas = [];
+  let linha = [], campo = '', aspas = false;
+  for(let i = 0; i < texto.length; i++){
+    const c = texto[i];
+    if(aspas){
+      if(c === '"' && texto[i + 1] === '"'){ campo += '"'; i++; }
+      else if(c === '"') aspas = false;
+      else campo += c;
+    }else if(c === '"') aspas = true;
+    else if(c === ','){ linha.push(campo); campo = ''; }
+    else if(c === '\n'){ linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
+    else if(c !== '\r') campo += c;
   }
-  if(!playlist.length){
-    box.innerHTML = '<div class="vazio">Nenhum material encontrado na pasta</div>';
+  if(campo.length || linha.length){ linha.push(campo); linhas.push(linha); }
+  return linhas.filter(l => l.some(v => String(v).trim() !== ''));
+}
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]));
+}
+function simOuVerdadeiro(v){
+  return ['SIM','S','TRUE','VERDADEIRO','1'].includes(String(v ?? '').trim().toUpperCase());
+}
+function textoExtra(v){
+  const t = String(v ?? '').trim();
+  if(!t || simOuVerdadeiro(t) || ['NAO','NÃO','FALSE','FALSO','0'].includes(t.toUpperCase())) return '';
+  return t;
+}
+async function buscarCsv(gid){
+  const resp = await fetch(urlCsv(gid) + '&t=' + Date.now(), {cache:'no-store'});
+  if(!resp.ok) throw new Error('Planilha ' + gid + ': ' + resp.status);
+  return parseCsv(await resp.text());
+}
+async function buscarJson(url){
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Google ' + resp.status);
+  return resp.json();
+}
+async function carregarControle(){
+  const linhas = await buscarCsv(GIDS.CONTROLE);
+  controle = {};
+  linhas.slice(1).forEach(l => {
+    const chave = String(l[0] || '').trim().toUpperCase();
+    if(chave) controle[chave] = String(l[1] || '').trim();
+  });
+}
+function midiaLiberada(){
+  return controle.MOSTRAR_MIDIA === undefined || simOuVerdadeiro(controle.MOSTRAR_MIDIA);
+}
+function aplicarVisibilidade(){
+  const mostra = chave => controle[chave] === undefined || simOuVerdadeiro(controle[chave]);
+  document.getElementById('secAgenda').classList.toggle('oculto', !mostra('MOSTRAR_AGENDA'));
+  document.getElementById('secAniv').classList.toggle('oculto', !mostra('MOSTRAR_ANIVERSARIOS'));
+  document.getElementById('rodape').classList.toggle('oculto', !mostra('MOSTRAR_RODAPE'));
+}
+async function carregarAvisos(){
+  const linhas = await buscarCsv(GIDS.AVISOS);
+  const itens = linhas.slice(1).filter(l => l[0] && (l[2] === undefined || l[2] === '' || simOuVerdadeiro(l[2]) || textoExtra(l[1])));
+  const ativos = linhas.slice(1).filter(l => l[0] && (l.length < 3 || l[2] === '' || simOuVerdadeiro(l[2]) || !['NAO','NÃO','FALSE','0'].includes(String(l[2]).trim().toUpperCase())));
+  const lista = ativos.length ? ativos : itens;
+  const ul = document.getElementById('listaAvisos');
+  ul.innerHTML = lista.length ? lista.map(l => {
+    const extra = textoExtra(l[1]);
+    return '<li>' + escapeHtml(l[0]) + (extra ? ' - ' + escapeHtml(extra) : '') + '</li>';
+  }).join('') : '<li>Nenhum aviso no momento</li>';
+}
+async function carregarNoticias(){
+  const linhas = await buscarCsv(GIDS.NOTICIAS);
+  const itens = linhas.slice(1).filter(l => l[0]);
+  document.getElementById('listaNoticias').innerHTML = itens.length ? itens.map(l => '<li>' + escapeHtml(l[0]) + '</li>').join('') : '<li>Nenhuma notícia no momento</li>';
+}
+function inicioSemana(base){
+  const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+  d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+function fimSemana(inicio){
+  const d = new Date(inicio);
+  d.setDate(d.getDate() + 6);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+function dataNaSemana(dia, mes, inicio, fim){
+  for(let ano = inicio.getFullYear() - 1; ano <= fim.getFullYear() + 1; ano++){
+    const dt = new Date(ano, mes - 1, dia);
+    if(dt.getMonth() === mes - 1 && dt >= inicio && dt <= fim) return dt;
+  }
+  return null;
+}
+async function carregarAniversarios(){
+  const linhas = await buscarCsv(GIDS.ANIVERSARIOS);
+  const hoje = new Date();
+  const inicio = inicioSemana(hoje);
+  const fim = fimSemana(inicio);
+  const itens = linhas.slice(1).map(l => {
+    const dt = dataNaSemana(Number(l[1]), Number(l[2]), inicio, fim);
+    return dt && l[0] ? {nome:l[0], dt} : null;
+  }).filter(Boolean).sort((a, b) => a.dt - b.dt);
+  const ul = document.getElementById('listaAniv');
+  ul.innerHTML = itens.length ? itens.map(item => {
+    const ehHoje = item.dt.toDateString() === hoje.toDateString();
+    const data = String(item.dt.getDate()).padStart(2, '0') + '/' + String(item.dt.getMonth() + 1).padStart(2, '0');
+    return '<li' + (ehHoje ? ' class="hoje"' : '') + '>' + data + ' - ' + escapeHtml(item.nome) + (ehHoje ? ' - HOJE' : '') + '</li>';
+  }).join('') : '<li>Nenhum aniversariante nesta semana</li>';
+}
+async function carregarRodape(){
+  const linhas = await buscarCsv(GIDS.RODAPE);
+  const textos = linhas.slice(1).filter(l => l[0] && simOuVerdadeiro(l[1])).map(l => escapeHtml(l[0]));
+  document.getElementById('faixa').innerHTML = textos.join('&nbsp;&nbsp;•&nbsp;&nbsp;');
+}
+function atualizarRelogio(){
+  const agora = new Date();
+  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  document.getElementById('hora').textContent = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('data').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()] + ' de ' + agora.getFullYear();
+}
+async function carregarClima(){
+  const el = document.getElementById('clima');
+  if(!CLIMA_CHAVE){ el.textContent = ''; return; }
+  try{
+    const r = await fetch('https://api.openweathermap.org/data/2.5/weather?q=' + encodeURIComponent(CLIMA_CIDADE) + '&units=metric&lang=pt_br&appid=' + CLIMA_CHAVE);
+    if(!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    el.textContent = Math.round(j.main.temp) + '°C, ' + j.weather[0].description;
+  }catch(e){ el.textContent = ''; }
+}
+async function carregarAgenda(){
+  const agora = new Date();
+  const fim = new Date(agora.getTime() + AGENDA_DIAS * 86400000);
+  const url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CALENDAR_ID) + '/events?key=' + CALENDAR_KEY + '&singleEvents=true&orderBy=startTime&timeMin=' + agora.toISOString() + '&timeMax=' + fim.toISOString() + '&maxResults=50';
+  const j = await buscarJson(url);
+  const itens = j.items || [];
+  document.getElementById('agendaLista').innerHTML = itens.length ? itens.map(ev => {
+    const ini = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
+    const data = ini.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'});
+    const hora = ev.start.dateTime ? ini.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : 'Dia inteiro';
+    return '<li><strong>' + escapeHtml(data + ' ' + hora) + '</strong> - ' + escapeHtml(ev.summary || 'Sem título') + '</li>';
+  }).join('') : '<li>Nenhum evento nos próximos dias</li>';
+}
+async function listarArquivosDrive(){
+  const arquivos = [];
+  let token = '';
+  do{
+    const params = new URLSearchParams({
+      q: "'" + DRIVE_PASTA_ID + "' in parents and trashed = false",
+      fields: 'nextPageToken,files(id,name,mimeType)',
+      orderBy: 'name',
+      pageSize: '200',
+      key: DRIVE_KEY
+    });
+    if(token) params.set('pageToken', token);
+    const j = await buscarJson('https://www.googleapis.com/drive/v3/files?' + params.toString());
+    arquivos.push(...(j.files || []));
+    token = j.nextPageToken || '';
+  }while(token);
+  return arquivos;
+}
+async function paginasDoSlide(id){
+  const j = await buscarJson('https://slides.googleapis.com/v1/presentations/' + encodeURIComponent(id) + '?fields=slides.objectId&key=' + DRIVE_KEY);
+  return (j.slides || []).map(s => s.objectId).filter(Boolean);
+}
+async function carregarMidia(){
+  const arquivos = await listarArquivosDrive();
+  const nova = [];
+  for(const f of arquivos){
+    if(f.mimeType.startsWith('image/')) nova.push({tipo:'imagem', id:f.id, nome:f.name});
+    else if(f.mimeType.startsWith('video/')) nova.push({tipo:'video', id:f.id, nome:f.name});
+    else if(f.mimeType === 'application/vnd.google-apps.drawing') nova.push({tipo:'desenho', id:f.id, nome:f.name});
+    else if(f.mimeType === 'application/vnd.google-apps.presentation'){
+      try{
+        const paginas = await paginasDoSlide(f.id);
+        paginas.forEach((pageId, i) => nova.push({tipo:'slide', id:f.id, pageId, nome:f.name + ' - página ' + (i + 1)}));
+      }catch(e){ console.error('Slide não lido:', f.name, e); }
+    }
+  }
+  playlist = nova;
+}
+function pararVideo(){
+  if(!videoAtual) return;
+  videoAtual.pause();
+  videoAtual.removeAttribute('src');
+  videoAtual.load();
+  videoAtual = null;
+}
+function agendarPainel(){
+  clearTimeout(timerMidia);
+  emMidia = false;
+  pararVideo();
+  document.body.classList.remove('modo-midia');
+  document.getElementById('midia').innerHTML = '';
+  const toque = ++toqueMidia;
+  timerMidia = setTimeout(() => { if(toque === toqueMidia) iniciarCicloMidia(); }, PAINEL_TEMPO_NORMAL);
+}
+async function urlDoItem(item){
+  if(item.tipo === 'slide'){
+    const u = 'https://slides.googleapis.com/v1/presentations/' + encodeURIComponent(item.id) + '/pages/' + encodeURIComponent(item.pageId) + '/thumbnail?thumbnailProperties.mimeType=PNG&thumbnailProperties.thumbnailSize=LARGE&key=' + DRIVE_KEY;
+    const j = await buscarJson(u);
+    if(!j.contentUrl) throw new Error('Slide sem imagem');
+    return j.contentUrl;
+  }
+  if(item.tipo === 'desenho') return 'https://www.googleapis.com/drive/v3/files/' + item.id + '/export?mimeType=image/png&key=' + DRIVE_KEY;
+  return 'https://www.googleapis.com/drive/v3/files/' + item.id + '?alt=media&key=' + DRIVE_KEY;
+}
+async function mostrarItem(){
+  clearTimeout(timerMidia);
+  pararVideo();
+  const box = document.getElementById('midia');
+  const toque = toqueMidia;
+  const item = playlist[indiceMidia];
+  if(!emMidia || !item){ agendarPainel(); return; }
+  box.innerHTML = '<div class="vazio">Abrindo material...</div>';
+  let url = '';
+  try{ url = await urlDoItem(item); }
+  catch(e){
+    console.error(item.nome, e);
+    if(toque === toqueMidia) timerMidia = setTimeout(proximoItem, 1000);
     return;
   }
-  const item = playlist[indiceMidia % playlist.length];
-  const url = `https://www.googleapis.com/drive/v3/files/${item.id}?alt=media&key=${DRIVE_KEY}`;
+  if(toque !== toqueMidia || !emMidia) return;
   box.innerHTML = '';
-  if(item.mimeType.startsWith('video/')){
+  if(item.tipo === 'video'){
     const v = document.createElement('video');
     v.src = url;
     v.autoplay = true;
     v.muted = true;
     v.playsInline = true;
     v.onended = proximoItem;
-    v.onerror = () => setTimeout(proximoItem, 3000);
+    v.onerror = () => { timerMidia = setTimeout(proximoItem, 1000); };
     box.appendChild(v);
     videoAtual = v;
     v.play().catch(() => {});
-  } else {
+  }else{
     const img = document.createElement('img');
     img.src = url;
-    img.alt = item.name;
-    img.onerror = () => setTimeout(proximoItem, 3000);
+    img.alt = item.nome;
+    img.onerror = () => { timerMidia = setTimeout(proximoItem, 1000); };
     box.appendChild(img);
     timerMidia = setTimeout(proximoItem, MIDIA_TEMPO_IMAGEM);
   }
 }
-
 function proximoItem(){
-  clearTimeout(timerMidia);
-  if(!playlist.length) return;
-  indiceMidia = (indiceMidia + 1) % playlist.length;
+  if(!emMidia) return;
+  indiceMidia++;
+  if(indiceMidia >= playlist.length){ agendarPainel(); return; }
   mostrarItem();
 }
-
-document.getElementById('midia').addEventListener('click', () => {
-  if(videoAtual) videoAtual.muted = false;
-});
-
-/* ========== ATUALIZAÇÃO ========== */
-async function atualizarTudo(){
-  try{
-    await carregarControle();
-  }catch(e){
-    console.error(e);
-  }
-  aplicarVisibilidade();
-  const tarefas = [
-    carregarAvisos(),
-    carregarNoticias(),
-    carregarAniversarios(),
-    carregarRodape(),
-    carregarAgenda(),
-    carregarMidia(),
-    carregarClima()
-  ];
-  const resultados = await Promise.allSettled(tarefas);
-  resultados.forEach(r => {
-    if(r.status === 'rejected') console.error(r.reason);
-  });
+function iniciarCicloMidia(){
+  if(!midiaLiberada() || !playlist.length){ agendarPainel(); return; }
+  emMidia = true;
+  indiceMidia = 0;
+  document.body.classList.add('modo-midia');
+  mostrarItem();
 }
-
-/* ========== INÍCIO ========== */
+document.getElementById('midia').addEventListener('click', () => { if(videoAtual) videoAtual.muted = false; });
+async function atualizarTudo(){
+  try{ await carregarControle(); }catch(e){ console.error(e); }
+  aplicarVisibilidade();
+  const tarefas = [carregarAvisos(), carregarNoticias(), carregarAniversarios(), carregarRodape(), carregarAgenda(), carregarMidia(), carregarClima()];
+  (await Promise.allSettled(tarefas)).forEach(r => { if(r.status === 'rejected') console.error(r.reason); });
+  if(!emMidia && !timerMidia) agendarPainel();
+}
 atualizarRelogio();
 setInterval(atualizarRelogio, 1000);
 atualizarTudo();
